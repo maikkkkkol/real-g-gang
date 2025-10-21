@@ -12,7 +12,6 @@ const PAYMENT_INFO = {
 };
 
 // --- DATOS SIMULADOS DE 100 CARTAS POKÉMON ---
-// Se usan URLs reales de alta calidad para las primeras cartas y placeholders para el resto
 const generateMockProducts = () => {
   const products = [
     { id: 1, name: "Charizard VMAX (Shiny)", price: 95.00, imageUrl: "https://images.pokemontcg.io/swsh4_sv/SV107_hires.png", rarity: "Secret Rare" },
@@ -198,7 +197,8 @@ const CheckoutView = ({ total, onGoBackToShop }) => {
     el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
-    alert('Copiado al portapapeles: ' + text); // Usamos un simple alert para simular feedback
+    // Usamos un simple alert para simular feedback, ya que no se permiten modales
+    console.log('Copiado al portapapeles: ' + text); 
   };
 
 
@@ -220,7 +220,7 @@ const CheckoutView = ({ total, onGoBackToShop }) => {
       <p className="text-xl text-gray-700">Total a Transferir: <span className="text-4xl font-extrabold text-green-600">{formatCurrency(total)}</span></p>
 
       {/* Instrucciones y Datos Bancarios */}
-      <div className="p-6 bg-gray-500 rounded-lg border space-y-4 text-left">
+      <div className="p-6 bg-gray-50 rounded-lg border space-y-4 text-left">
         <h3 className="text-2xl font-semibold mb-3 text-gray-800 border-b pb-2">Datos para la Transferencia</h3>
         
         {/* Contenedor de Datos */}
@@ -334,8 +334,8 @@ const App = () => {
   // 4. Proceder al Pago
   const handleCheckout = (total) => {
     if (cart.length === 0) {
-        // En lugar de alert, usamos una forma visual de notificar
-        alert("El carrito está vacío. ¡Por favor, añade cartas!");
+        // Mostramos un mensaje en la consola en lugar de alert()
+        console.error("El carrito está vacío. ¡Por favor, añade cartas!");
         return;
     }
     setCheckoutTotal(total);
@@ -344,9 +344,6 @@ const App = () => {
   
   // 5. Función para cambiar la vista y limpiar el carrito después de una confirmación de pago (simulado)
   const handleGoBackToShop = () => {
-    // Si volvemos de checkout, asumimos que el usuario ha terminado con ese pedido.
-    // Podríamos limpiar el carrito o mantenerlo, lo mantendremos para que el usuario 
-    // pueda seguir comprando, pero lo limpiamos si se confirmó la transferencia.
     setCurrentView('shop');
   };
 
