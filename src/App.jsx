@@ -1,32 +1,34 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ShoppingCart, Zap, CreditCard, ArrowLeft, Trash2, CheckCircle, Info, XCircle } from 'lucide-react';
+import { ShoppingCart, Zap, CreditCard, ArrowLeft, Trash2, CheckCircle, Info } from 'lucide-react';
 
 // --- CONFIGURACIÓN DE PAGO POR TRANSFERENCIA BANCARIA ---
 const PAYMENT_INFO = {
   nombre: "Michel Amir Antonio Isuani Sandoval",
   rut: "21.899.952-2",
-  cuenta: "00000094192714", // Se simula el formato para que sea más fácil de copiar
+  cuenta: "00000094192714", // Número de cuenta simplificado para visualización
   banco: "Banco Santander",
   tipoCuenta: "Cuenta Corriente",
-  email: "michelvacuna@gmail.com"
+  email: "michelvacuna@gmail.com" // Correo donde se espera el comprobante
 };
 
 // --- DATOS SIMULADOS DE 100 CARTAS POKÉMON ---
 const generateMockProducts = () => {
   const products = [
-    { id: 1, name: "Charizard VMAX (Shiny)", price: 95.00, imageUrl: "https://images.pokemontcg.io/swsh4_sv/SV107_hires.png", rarity: "Secret Rare" },
-    { id: 2, name: "Pikachu (Base Set, 1st Ed)", price: 60.50, imageUrl: "https://images.pokemontcg.io/base1/58_hires.png", rarity: "Common" },
-    { id: 3, name: "Blastoise V", price: 32.75, imageUrl: "https://images.pokemontcg.io/swsh3/31_hires.png", rarity: "Rare Holo" },
-    { id: 4, name: "Mewtwo GX (Rainbow)", price: 88.99, imageUrl: "https://images.pokemontcg.io/sm3/78_hires.png", rarity: "Secret Rare" },
-    { id: 5, name: "Umbreon VMAX (Alternate Art)", price: 150.00, imageUrl: "https://images.pokemontcg.io/swsh7/215_hires.png", rarity: "Alternate Art" },
+    // Cartas de ejemplo que has usado antes (ajustadas a un formato más limpio)
+    { id: 1, name: "Carta Pikachu", price: 3000, imageUrl: "https://images.pokemontcg.io/base1/58_hires.png", rarity: "Common" },
+    { id: 2, name: "Carta Charizard", price: 10000, imageUrl: "https://images.pokemontcg.io/base1/4_hires.png", rarity: "Rare Holo" },
+    { id: 3, name: "Carta Eevee", price: 2500, imageUrl: "https://images.pokemontcg.io/xy11/108_hires.png", rarity: "Uncommon" },
+    
+    // Rellenar hasta 100 productos con placeholders
+    { id: 4, name: "Charizard VMAX (Shiny)", price: 95000, imageUrl: "https://images.pokemontcg.io/swsh4_sv/SV107_hires.png", rarity: "Secret Rare" },
+    { id: 5, name: "Umbreon VMAX (Alternate Art)", price: 150000, imageUrl: "https://images.pokemontcg.io/swsh7/215_hires.png", rarity: "Alternate Art" },
   ];
   
-  // Rellenar hasta 100 productos con placeholders para simular un catálogo grande
   for (let i = products.length + 1; i <= 100; i++) {
     products.push({
       id: i,
       name: `Carta Genérica #${i}`,
-      price: (1 + Math.floor(Math.random() * 200)) / 10, // Precio entre 0.10 y 20.00
+      price: Math.floor(1000 + Math.random() * 50000), // Precio entre 1.000 y 51.000
       imageUrl: `https://placehold.co/100x140/805AD5/fff?text=Card+${i}`,
       rarity: ["Common", "Uncommon", "Rare"][Math.floor(Math.random() * 3)],
     });
@@ -38,7 +40,8 @@ const ALL_PRODUCTS = generateMockProducts();
 
 // Función utilitaria para formatear el precio
 const formatCurrency = (amount) => {
-  return `$${amount.toFixed(2)}`;
+  // Asume moneda chilena o similar, sin decimales para los miles.
+  return `$${new Intl.NumberFormat('es-CL').format(amount)}`;
 };
 
 // Función para generar un ID de pedido simple y aleatorio (simulación)
@@ -60,10 +63,10 @@ const ProductList = ({ onAddToCart }) => (
           src={pokemon.imageUrl} 
           alt={pokemon.name} 
           className="w-full h-auto mb-2 rounded-lg object-contain max-h-40 border border-gray-200" 
-          onError={(e) => { e.target.onerror = null; e.target.src=`https://placehold.co/100x140/E0F2FE/1E40AF?text=${pokemon.id}`}}
+          onError={(e) => { e.target.onerror = null; e.target.src=`https://placehold.co/100x140/E0F2FE/1E40AF?text=Card+${pokemon.id}`}}
         />
         <h3 className="text-sm font-semibold text-gray-800 text-center truncate w-full px-1">{pokemon.name}</h3>
-        <p className={`text-xs font-medium mb-2 ${pokemon.rarity === 'Secret Rare' ? 'text-yellow-600' : 'text-gray-500'}`}>{pokemon.rarity}</p>
+        <p className={`text-xs font-medium mb-2 ${pokemon.rarity.includes('Rare') ? 'text-yellow-600' : 'text-gray-500'}`}>{pokemon.rarity}</p>
         <p className="text-lg font-extrabold text-green-600 mb-2">
           {formatCurrency(pokemon.price)}
         </p>
@@ -72,7 +75,7 @@ const ProductList = ({ onAddToCart }) => (
           className="w-full text-xs flex items-center justify-center space-x-1 bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-1.5 px-2 rounded-lg shadow-md transition duration-200 active:scale-95"
         >
           <ShoppingCart className="w-4 h-4"/>
-          <span>Añadir</span>
+          <span>Agregar</span>
         </button>
       </div>
     ))}
@@ -84,9 +87,8 @@ const ProductList = ({ onAddToCart }) => (
 // ----------------------------------------------------------------------
 const CartView = ({ cart, onUpdateQuantity, onRemoveItem, onCheckout }) => {
   const subtotal = useMemo(() => cart.reduce((acc, item) => acc + item.price * item.quantity, 0), [cart]);
-  const taxRate = 0.10; // Impuesto simulado (10%)
-  const taxes = subtotal * taxRate;
-  const total = subtotal + taxes;
+  const shipping = subtotal > 50000 ? 0 : 5000; // Envío gratis si pasa los $50.000
+  const total = subtotal + shipping;
 
   if (cart.length === 0) {
     return (
@@ -153,8 +155,10 @@ const CartView = ({ cart, onUpdateQuantity, onRemoveItem, onCheckout }) => {
             <span className="font-semibold">{formatCurrency(subtotal)}</span>
           </div>
           <div className="flex justify-between text-lg text-gray-700 border-b pb-3">
-            <span>Impuesto (10%):</span>
-            <span className="font-semibold">{formatCurrency(taxes)}</span>
+            <span>Envío:</span>
+            <span className={`font-semibold ${shipping === 0 ? 'text-green-500 font-bold' : ''}`}>
+                {shipping === 0 ? '¡GRATIS!' : formatCurrency(shipping)}
+            </span>
           </div>
           <div className="flex justify-between text-2xl font-bold text-indigo-800 pt-3">
             <span>Total Final:</span>
@@ -162,13 +166,14 @@ const CartView = ({ cart, onUpdateQuantity, onRemoveItem, onCheckout }) => {
           </div>
         </div>
 
-        {/* Botón de Pago */}
+        {/* Botón de Pago (Transferencia Bancaria) */}
         <button
           onClick={() => onCheckout(total)}
           className="w-full flex items-center justify-center space-x-2 py-4 bg-green-500 hover:bg-green-600 text-white text-xl font-bold rounded-xl shadow-lg transition duration-200 transform hover:scale-[1.01] active:scale-95"
+          disabled={cart.length === 0}
         >
           <CreditCard className="w-6 h-6"/>
-          <span>Pagar con Transferencia</span>
+          <span>Proceder al Pago</span>
         </button>
       </div>
     </div>
@@ -180,7 +185,7 @@ const CartView = ({ cart, onUpdateQuantity, onRemoveItem, onCheckout }) => {
 // ----------------------------------------------------------------------
 const CheckoutView = ({ total, onGoBackToShop }) => {
   const [orderId, setOrderId] = useState(null);
-  const [hasPaid, setHasPaid] = useState(false);
+  const [hasConfirmed, setHasConfirmed] = useState(false);
 
   // Genera el ID del pedido solo una vez al cargar la vista de checkout
   useEffect(() => {
@@ -197,14 +202,14 @@ const CheckoutView = ({ total, onGoBackToShop }) => {
     el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
-    // Usamos un simple alert para simular feedback, ya que no se permiten modales
+    // Usamos un simple log en consola para simular feedback
     console.log('Copiado al portapapeles: ' + text); 
+    alert(`Copiado: ${text}`); // Usamos alert temporalmente para que veas que funciona en el navegador.
   };
-
 
   return (
     <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-xl mx-auto space-y-6 text-center">
-      <h2 className="text-3xl font-bold text-indigo-700">Finalizar Compra y Pago</h2>
+      <h2 className="text-3xl font-bold text-indigo-700">Finalizar Compra - Transferencia</h2>
       
       {/* Mensaje de Pedido */}
       <div className="bg-indigo-100 p-4 rounded-lg border-l-4 border-indigo-500 text-indigo-800">
@@ -228,7 +233,7 @@ const CheckoutView = ({ total, onGoBackToShop }) => {
             {Object.entries(PAYMENT_INFO).map(([key, value]) => (
                 <div key={key} className="flex justify-between items-center text-sm">
                     <span className="font-medium text-gray-600 capitalize">
-                        {key === 'rut' ? 'RUT' : key === 'email' ? 'Email' : key === 'cuenta' ? 'Nro. de Cuenta' : key === 'tipoCuenta' ? 'Tipo de Cuenta' : key}:
+                        {key === 'rut' ? 'RUT' : key === 'email' ? 'Email para Comprobante' : key === 'cuenta' ? 'Nro. de Cuenta' : key === 'tipoCuenta' ? 'Tipo de Cuenta' : key.charAt(0).toUpperCase() + key.slice(1)}:
                     </span>
                     <div className="flex items-center space-x-2">
                         <span className="font-bold text-gray-900 text-right">{value}</span>
@@ -244,27 +249,26 @@ const CheckoutView = ({ total, onGoBackToShop }) => {
         </div>
         
         <p className="mt-4 text-sm text-red-700 font-semibold">
-            IMPORTANTE: La transferencia debe ser al RUT y Cuenta Corriente indicados.
+            IMPORTANTE: Realiza la transferencia y luego presiona "Confirmar Transferencia".
         </p>
       </div>
 
       {/* Botón de Confirmación de Pago */}
       <button
-        onClick={() => setHasPaid(true)}
-        disabled={hasPaid}
+        onClick={() => setHasConfirmed(true)}
+        disabled={hasConfirmed}
         className="w-full flex items-center justify-center space-x-2 py-3 bg-yellow-500 hover:bg-yellow-600 text-gray-900 text-xl font-bold rounded-xl shadow-lg transition duration-200 disabled:opacity-50"
       >
         <CheckCircle className="w-5 h-5"/>
-        <span>{hasPaid ? 'Comprobante Enviado' : 'Ya Realicé la Transferencia'}</span>
+        <span>{hasConfirmed ? 'Confirmación Recibida' : 'Confirmar Transferencia'}</span>
       </button>
 
       {/* Mensaje Post-Pago */}
-      {hasPaid && (
+      {hasConfirmed && (
         <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mt-4" role="alert">
-          <p className="font-bold text-lg">¡Proceso Completado!</p>
+          <p className="font-bold text-lg">¡Confirmación Enviada!</p>
           <p>
-            Hemos registrado tu confirmación. Revisa tu email **michelvacuna@gmail.com** con el comprobante de pago junto con el número de pedido **{orderId}** para finalizar la compra. 
-            Una vez validada la transferencia, recibirás una confirmación final.
+            Hemos registrado tu confirmación. Revisa tu correo **{PAYMENT_INFO.email}** para enviar el comprobante de pago junto con el número de pedido **{orderId}**. Una vez validada la transferencia, recibirás una confirmación final.
           </p>
         </div>
       )}
@@ -275,7 +279,7 @@ const CheckoutView = ({ total, onGoBackToShop }) => {
         className="mt-4 flex items-center justify-center space-x-2 text-indigo-500 hover:text-indigo-700 transition duration-200"
       >
         <ArrowLeft className="w-4 h-4"/>
-        <span>Volver a la tienda</span>
+        <span>Volver a la Tienda</span>
       </button>
     </div>
   );
@@ -334,7 +338,6 @@ const App = () => {
   // 4. Proceder al Pago
   const handleCheckout = (total) => {
     if (cart.length === 0) {
-        // Mostramos un mensaje en la consola en lugar de alert()
         console.error("El carrito está vacío. ¡Por favor, añade cartas!");
         return;
     }
@@ -342,9 +345,11 @@ const App = () => {
     setCurrentView('checkout');
   };
   
-  // 5. Función para cambiar la vista y limpiar el carrito después de una confirmación de pago (simulado)
+  // 5. Función para volver a la tienda (y limpiar el carrito después de un pago)
   const handleGoBackToShop = () => {
     setCurrentView('shop');
+    // Opcional: limpiar el carrito si ya se confirmó la transferencia
+    // setCart([]); 
   };
 
   // 6. Función para renderizar el contenido según la vista actual
@@ -379,7 +384,12 @@ const App = () => {
             onClick={() => setCurrentView('shop')}
           >
             {/* Logo */}
-            <img src="https://i.imgur.com/K502X5E.png" alt="OniStore TCG Logo" className="h-10 w-auto" />
+            <img 
+                src="https://i.imgur.com/K502X5E.png" 
+                alt="OniStore TCG Logo" 
+                className="h-10 w-auto object-contain" 
+                onError={(e) => { e.target.onerror = null; e.target.src=`https://placehold.co/40x40/FF4500/fff?text=Oni`}}
+            />
             <h1 className="text-2xl font-black">
               OniStore TCG
             </h1>
@@ -418,7 +428,7 @@ const App = () => {
         <h2 className="text-4xl font-extrabold text-gray-800 mb-8 text-center">
             {currentView === 'shop' && "Colección de Cartas Pokémon (100+)"}
             {currentView === 'cart' && "Carrito de Compras"}
-            {currentView === 'checkout' && "Transferencia Bancaria"}
+            {currentView === 'checkout' && "Pago por Transferencia Bancaria"}
         </h2>
         
         {renderContent()}
